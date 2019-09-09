@@ -14,6 +14,11 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.Toast;
+
+import com.opencsv.CSVReader;
+import java.io.IOException;
+import java.io.FileReader;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,10 +39,7 @@ public class MainActivity extends AppCompatActivity {
         btnChooseFile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
-                chooseFile.setType("*/*");
-                chooseFile = Intent.createChooser(chooseFile, "Choose CSV file");
-                startActivityForResult(chooseFile, PICKFILE_RESULT_CODE);
+                openFile("text/*");
             }
         });
 
@@ -52,6 +54,33 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void openFile(String mimeType) {
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType(mimeType);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // special intent for Samsung file manager
+        Intent sIntent = new Intent("com.sec.android.app.myfiles.PICK_DATA");
+        sIntent.putExtra("CONTENT_TYPE", mimeType);
+        sIntent.addCategory(Intent.CATEGORY_DEFAULT);
+
+        Intent chooserIntent;
+        if (getPackageManager().resolveActivity(sIntent, 0) != null){
+            // it is device with Samsung file manager
+            chooserIntent = Intent.createChooser(sIntent, "Open file");
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] { intent});
+        } else {
+            chooserIntent = Intent.createChooser(intent, "Open file");
+        }
+
+        try {
+            startActivityForResult(chooserIntent, PICKFILE_RESULT_CODE);
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(getApplicationContext(), "No suitable File Manager was found.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -59,9 +88,24 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == -1) {
                     fileUri = data.getData();
                     filePath = fileUri.getPath();
+                    readCsvFile(filePath);
                 }
 
                 break;
+        }
+    }
+
+    private void readCsvFile(String FilePath) {
+        try {
+            CSVReader reader = new CSVReader(new FileReader(FilePath));
+            String[] nextLine;
+            while ((nextLine = reader.readNext()) != null) {
+                // nextLine[] is an array of values from the line
+                System.out.println(nextLine[0] + nextLine[1] + "etc...");
+                Toast.makeText(getApplicationContext(), nextLine[0] + nextLine[1] + "etc...", Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException e) {
+
         }
     }
 

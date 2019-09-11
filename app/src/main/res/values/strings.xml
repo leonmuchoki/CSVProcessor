@@ -2,4 +2,9 @@
     <string name="app_name">CSV Processor</string>
     <string name="action_settings">Settings</string>
     <string name="choose_file">Choose CSV file</string>
+    <string name="chose_file">Choose CSV file</string>
+    <string name="column_separator">Select column separator</string>
+    <string name="comma_separator">comma  (,)</string>
+    <string name="semicolon_separator">semicolon  (;)</string>
+    <string name="pipe_separator">pipe  (|)</string>
 </resources>

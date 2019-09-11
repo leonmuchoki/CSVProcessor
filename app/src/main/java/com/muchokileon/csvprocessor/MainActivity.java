@@ -1,5 +1,6 @@
 package com.muchokileon.csvprocessor;
 
+import android.app.ListActivity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,22 +11,39 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TableLayout;
+import android.widget.TableRow;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+
 import java.io.IOException;
 import java.io.FileReader;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final int PICKFILE_RESULT_CODE = 1;
-    private Button btnChooseFile;
     private Uri fileUri;
     private String filePath;
+    private String selectedColumnSeparator;
+
+    private Button btnChooseFile;
+    private RadioGroup radioGroupSeparators;
+    private RadioButton radioSeparator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,14 +52,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        btnChooseFile = findViewById(R.id.btnChooseFile);
-
-        btnChooseFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openFile("text/*");
-            }
-        });
+        addListenerOnButton();
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -50,6 +61,32 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "CSV PROCESSOR", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+            }
+        });
+    }
+
+    public void addListenerOnButton() {
+        radioGroupSeparators = (RadioGroup) findViewById(R.id.radioGroupSeparators);
+        btnChooseFile = findViewById(R.id.btnChooseFile);
+
+        btnChooseFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (radioGroupSeparators.getCheckedRadioButtonId() == -1) {
+                    Toast.makeText(getApplicationContext(),
+                            "Please select column separator", Toast.LENGTH_SHORT).show();
+                } else {
+                    // get selected radio button from radioGroup
+                    int selectedId = radioGroupSeparators.getCheckedRadioButtonId();
+
+                    // find the radiobutton by returned id
+                    radioSeparator = (RadioButton) findViewById(selectedId);
+
+                    selectedColumnSeparator = radioSeparator.getText().toString();
+
+                    openFile("text/*");
+                }
+
             }
         });
     }
@@ -95,17 +132,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void readCsvFile(String FilePath) {
+    public void readCsvFile(String FilePath) {
         try {
-            CSVReader reader = new CSVReader(new FileReader(FilePath));
-            String[] nextLine;
-            while ((nextLine = reader.readNext()) != null) {
-                // nextLine[] is an array of values from the line
-                System.out.println(nextLine[0] + nextLine[1] + "etc...");
-                Toast.makeText(getApplicationContext(), nextLine[0] + nextLine[1] + "etc...", Toast.LENGTH_SHORT).show();
-            }
+            CSVParser parser = new CSVParserBuilder().withSeparator(selectedColumnSeparator.charAt(0)).build();
+            CSVReader csvReader = new CSVReaderBuilder(new FileReader(FilePath))
+                    .withCSVParser(parser)
+                    //.withSkipLines(1)
+                    .build();
+
+            List<String[]> allData = csvReader.readAll();
+            retrieveDataAndDisplay(allData);
+
         } catch (IOException e) {
 
+        }
+    }
+
+    private void retrieveDataAndDisplay(List<String[]> allData) {
+        TableLayout table = (TableLayout)findViewById(R.id.table_layout);
+        for (String[] array : allData){
+            for (String s : array){
+                //System.out.println(s.split(","));
+                String[] _sArray = s.split(",");
+                TableRow row = new TableRow(this);
+                for (String s2 : _sArray){
+
+                    TextView tv = new TextView(this);
+                    tv.setText(s2);
+                    //tv.setGravity(Gravity.CENTER_HORIZONTAL);
+                    row.addView(tv);
+
+                }
+                table.addView(row);
+
+            }
         }
     }
 

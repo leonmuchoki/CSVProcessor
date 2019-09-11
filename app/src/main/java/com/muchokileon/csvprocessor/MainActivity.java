@@ -2,6 +2,7 @@ package com.muchokileon.csvprocessor;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -155,6 +156,8 @@ public class MainActivity extends AppCompatActivity {
                 //System.out.println(s.split(","));
                 String[] _sArray = s.split(",");
                 TableRow row = new TableRow(this);
+                Drawable drawable = getResources().getDrawable(R.drawable.border);
+                row.setBackground(drawable);
                 for (String s2 : _sArray){
 
                     TextView tv = new TextView(this);
